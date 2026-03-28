@@ -8,7 +8,18 @@ import type {
   ChangedField,
   Source,
   SourceSummary,
+  Product,
 } from "@/types";
+
+export interface DeltaSummary {
+  added: number;
+  removed: number;
+  changed: number;
+}
+
+export interface AnnotatedDeltaRun extends FeedRunSummary {
+  summary: DeltaSummary;
+}
 
 export async function getSourceBySlug(slug: string): Promise<Source | null> {
   const supabase = createAdminClient();
@@ -38,6 +49,60 @@ export async function getAllSources(): Promise<SourceSummary[]> {
   );
 
   return results;
+}
+
+export async function getLatestFullFeedRun(sourceId: string): Promise<FeedRun | null> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("feed_runs")
+    .select("*, products(*)")
+    .eq("source_id", sourceId)
+    .eq("type", "full")
+    .order("received_at", { ascending: false })
+    .limit(1)
+    .single();
+  return data ?? null;
+}
+
+export async function getDeltaRunsSince(sourceId: string, afterTimestamp: string): Promise<FeedRun[]> {
+  const supabase = createAdminClient();
+  const { data } = await supabase
+    .from("feed_runs")
+    .select("*, products(*)")
+    .eq("source_id", sourceId)
+    .eq("type", "delta")
+    .gt("received_at", afterTimestamp)
+    .order("received_at", { ascending: true });
+  return (data ?? []) as FeedRun[];
+}
+
+export function computeDeltaSummary(fullRunProducts: Product[], deltaRunProducts: Product[]): DeltaSummary {
+  const baseMap = new Map(fullRunProducts.map((p) => [p.item_id ?? p.id, p]));
+  const headMap = new Map(deltaRunProducts.map((p) => [p.item_id ?? p.id, p]));
+  const allKeys = new Set([...baseMap.keys(), ...headMap.keys()]);
+
+  let added = 0;
+  let removed = 0;
+  let changed = 0;
+
+  for (const key of allKeys) {
+    const base = baseMap.get(key);
+    const head = headMap.get(key);
+
+    if (!base) {
+      added++;
+    } else if (!head) {
+      removed++;
+    } else {
+      const baseAttrs = base.attributes ?? {};
+      const headAttrs = head.attributes ?? {};
+      const allFields = new Set([...Object.keys(baseAttrs), ...Object.keys(headAttrs)]);
+      const hasChange = [...allFields].some((f) => (baseAttrs[f] ?? "") !== (headAttrs[f] ?? ""));
+      if (hasChange) changed++;
+    }
+  }
+
+  return { added, removed, changed };
 }
 
 export async function getLatestFeedRun(sourceId?: string): Promise<FeedRun | null> {

@@ -3,7 +3,14 @@ import Layout from "@/layouts/Layout.astro";
 import { ProductGrid } from "@/components/ProductGrid";
 import { AttributeSchemaView } from "@/components/AttributeSchemaView";
 import { FeedRunBadge } from "@/components/FeedRunBadge";
-import { getSourceBySlug, getLatestFeedRun } from "@/lib/services/feed-runs";
+import { CatalogDeltaTimeline } from "@/components/CatalogDeltaTimeline";
+import {
+  getSourceBySlug,
+  getLatestFullFeedRun,
+  getDeltaRunsSince,
+  computeDeltaSummary,
+} from "@/lib/services/feed-runs";
+import type { AnnotatedDeltaRun } from "@/lib/services/feed-runs";
 
 const { source: slug } = Astro.params;
 
@@ -13,7 +20,19 @@ if (!source) {
   return new Response(null, { status: 404 });
 }
 
-const feedRun = await getLatestFeedRun(source.id);
+const feedRun = await getLatestFullFeedRun(source.id);
+
+const deltaRuns: AnnotatedDeltaRun[] = feedRun
+  ? (await getDeltaRunsSince(source.id, feedRun.received_at)).map((delta) => ({
+      id: delta.id,
+      received_at: delta.received_at,
+      type: delta.type,
+      product_count: delta.product_count,
+      source_id: delta.source_id,
+      created_at: delta.created_at,
+      summary: computeDeltaSummary(feedRun.products, delta.products),
+    }))
+  : [];
 ---
 
 <Layout title={`${source.display_name} · AI Hub Feed Visualiser`}>
@@ -38,6 +57,7 @@ const feedRun = await getLatestFeedRun(source.id);
           <div class="flex items-center gap-3">
             <h1 class="text-xl font-semibold text-gray-900">{source.display_name}</h1>
             {feedRun && <FeedRunBadge type={feedRun.type} client:load />}
+            <span class="text-xs text-gray-400 font-normal">Full Catalogue</span>
           </div>
           <nav class="flex items-center gap-1 text-sm -mb-px">
             <a
@@ -69,6 +89,7 @@ const feedRun = await getLatestFeedRun(source.id);
           <>
             <div class="mb-4 flex items-center justify-between gap-4">
               <p class="text-sm text-gray-500">
+                Full feed received{" "}
                 {new Date(feedRun.received_at).toLocaleString("en-GB", {
                   dateStyle: "long",
                   timeStyle: "short",
@@ -86,19 +107,21 @@ const feedRun = await getLatestFeedRun(source.id);
                 <p class="text-gray-500">No products in this feed run.</p>
               </div>
             )}
+
+            <CatalogDeltaTimeline deltaRuns={deltaRuns} fullRunId={feedRun.id} client:load />
           </>
         ) : (
           <div class="flex flex-col items-center justify-center py-32 text-center">
             <svg class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M12 5l7 7-7 7" />
             </svg>
-            <h2 class="text-lg font-medium text-gray-700">No feeds yet</h2>
+            <h2 class="text-lg font-medium text-gray-700">No full feed received yet</h2>
             <p class="mt-2 text-sm text-gray-500 max-w-sm">
-              Point your AI Hub webhook at{" "}
+              The catalogue will appear here once a full feed is received. Point your AI Hub webhook at{" "}
               <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">
                 POST /api/feed/ingest/{source.slug}
               </code>{" "}
-              and the latest catalogue will appear here.
+              and ensure the feed is sent as a full export.
             </p>
           </div>
         )
