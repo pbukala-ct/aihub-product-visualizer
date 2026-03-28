@@ -20,7 +20,7 @@ POST https://<your-domain>/api/feed/ingest/<source-name>
 Content-Type: text/csv
 ```
 
-`<source-name>` is a URL-safe slug (e.g. `john-lewis`, `acme-store`). The source is created automatically on the first ingest.
+`<source-name>` is a URL-safe slug (e.g. `my-store`, `acme-store`). The source is created automatically on the first ingest.
 
 ### Feed type detection
 
