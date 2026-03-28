@@ -1,5 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import AppNav from "@/components/AppNav.astro";
 import { FeedRunBadge } from "@/components/FeedRunBadge";
 import { DeleteSourceButton } from "@/components/DeleteSourceButton";
 import { getAllSources } from "@/lib/services/feed-runs";
@@ -9,16 +10,7 @@ const sources = await getAllSources();
 
 <Layout title="AI Hub Feed Visualiser">
   <div class="min-h-screen bg-gray-50">
-    <header class="bg-white border-b border-gray-200 px-4 py-4 sm:px-6">
-      <div class="mx-auto max-w-7xl flex items-center justify-between gap-4">
-        <h1 class="text-xl font-semibold text-gray-900">AI Hub Feed Visualiser</h1>
-        <nav class="flex items-center gap-4 text-sm">
-          <a href="/" class="font-medium text-gray-900 border-b-2 border-indigo-500 pb-0.5">Catalogues</a>
-          <a href="/history" class="text-gray-500 hover:text-gray-900 transition-colors">Feed History</a>
-          <a href="/diff" class="text-gray-500 hover:text-gray-900 transition-colors">Compare Feeds</a>
-        </nav>
-      </div>
-    </header>
+    <AppNav activePage="catalogues" />
 
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       {

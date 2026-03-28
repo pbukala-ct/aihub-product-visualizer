@@ -1,0 +1,123 @@
+---
+interface Source {
+  slug: string;
+  display_name: string;
+}
+
+interface Props {
+  /** Which top-level nav item is active */
+  activePage: "catalogues" | "history" | "diff" | "feed-run";
+  /** If set, renders the source sub-nav bar below the main nav */
+  source?: Source;
+  /** Which source tab is active */
+  activeSourceTab?: "products" | "history" | "diff";
+  /** Optional back link shown in the main nav bar */
+  backTo?: { href: string; label: string };
+}
+
+const { activePage, source, activeSourceTab, backTo } = Astro.props;
+
+const globalNav = [
+  { id: "catalogues", label: "Catalogues", href: "/" },
+  { id: "history",    label: "Feed History", href: "/history" },
+  { id: "diff",       label: "Compare Feeds", href: "/diff" },
+] as const;
+---
+
+<header class="bg-slate-900 shadow-lg">
+  <!-- Main nav bar -->
+  <div class="mx-auto max-w-7xl px-4 sm:px-6">
+    <div class="flex h-14 items-center justify-between gap-6">
+
+      <!-- Left: logo + optional back link -->
+      <div class="flex items-center gap-4 min-w-0">
+        <a href="/" class="flex items-center gap-2.5 shrink-0 group">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500 group-hover:bg-indigo-400 transition-colors">
+            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-white tracking-tight">AI Hub Feed Visualiser</span>
+        </a>
+
+        {backTo && (
+          <a
+            href={backTo.href}
+            class="hidden sm:flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+          >
+            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            {backTo.label}
+          </a>
+        )}
+      </div>
+
+      <!-- Right: global nav -->
+      <nav class="flex items-center gap-1">
+        {globalNav.map(({ id, label, href }) => (
+          <a
+            href={href}
+            class:list={[
+              "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+              activePage === id
+                ? "bg-slate-700 text-white"
+                : "text-slate-400 hover:text-white hover:bg-slate-700/60",
+            ]}
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+    </div>
+  </div>
+
+  <!-- Source sub-nav bar -->
+  {source && (
+    <div class="border-t border-slate-700/60 bg-slate-800">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6">
+        <div class="flex h-11 items-center justify-between gap-4">
+
+          <!-- Source name -->
+          <div class="flex items-center gap-2 min-w-0">
+            {backTo && (
+              <a
+                href={backTo.href}
+                class="sm:hidden flex items-center gap-1 text-xs text-slate-400 hover:text-white transition-colors mr-1"
+              >
+                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+              </a>
+            )}
+            <span class="text-sm font-semibold text-white truncate">{source.display_name}</span>
+            <span class="text-slate-600 text-xs">·</span>
+            <code class="text-xs text-slate-500 font-mono truncate hidden sm:block">/api/feed/ingest/{source.slug}</code>
+          </div>
+
+          <!-- Source tabs -->
+          <nav class="flex items-center gap-0.5 shrink-0">
+            {[
+              { id: "products", label: "Products",     href: `/source/${source.slug}` },
+              { id: "history",  label: "Feed History", href: `/history?source=${source.slug}` },
+              { id: "diff",     label: "Compare",      href: `/diff?source=${source.slug}` },
+            ].map(({ id, label, href }) => (
+              <a
+                href={href}
+                class:list={[
+                  "px-3 py-2 text-sm rounded-md transition-colors",
+                  activeSourceTab === id
+                    ? "bg-indigo-600 text-white font-medium"
+                    : "text-slate-400 hover:text-white hover:bg-slate-700",
+                ]}
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </div>
+  )}
+</header>

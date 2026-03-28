@@ -1,5 +1,6 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import AppNav from "@/components/AppNav.astro";
 import { ProductGrid } from "@/components/ProductGrid";
 import { AttributeSchemaView } from "@/components/AttributeSchemaView";
 import { FeedRunBadge } from "@/components/FeedRunBadge";
@@ -15,20 +16,7 @@ if (!feedRun) {
 
 <Layout title={`Feed Run · ${new Date(feedRun.received_at).toLocaleDateString("en-GB")}`}>
   <div class="min-h-screen bg-gray-50">
-    <header class="bg-white border-b border-gray-200 px-4 py-4 sm:px-6">
-      <div class="mx-auto max-w-7xl flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <a href="/history" class="text-sm text-gray-500 hover:text-gray-900 transition-colors">← Feed History</a>
-          <span class="text-gray-300">|</span>
-          <h1 class="text-xl font-semibold text-gray-900">Feed Run</h1>
-          <FeedRunBadge type={feedRun.type} client:load />
-        </div>
-        <nav class="flex items-center gap-4 text-sm">
-          <a href="/" class="text-gray-500 hover:text-gray-900 transition-colors">Catalogues</a>
-          <a href="/history" class="text-gray-500 hover:text-gray-900 transition-colors">Feed History</a>
-        </nav>
-      </div>
-    </header>
+    <AppNav activePage="history" backTo={{ href: "/history", label: "Feed History" }} />
 
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       <div class="mb-4 flex items-center justify-between gap-4">
