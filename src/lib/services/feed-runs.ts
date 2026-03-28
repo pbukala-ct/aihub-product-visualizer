@@ -164,40 +164,76 @@ export async function diffFeedRuns(baseId: string, headId: string): Promise<Feed
   const baseMap = new Map(base.products.map((p) => [p.item_id ?? p.id, p]));
   const headMap = new Map(head.products.map((p) => [p.item_id ?? p.id, p]));
 
-  const allKeys = new Set([...baseMap.keys(), ...headMap.keys()]);
   const rows: ProductDiffRow[] = [];
   const summary: Record<DiffStatus, number> = { added: 0, removed: 0, changed: 0, unchanged: 0 };
 
-  for (const key of allKeys) {
-    const baseProduct = baseMap.get(key);
-    const headProduct = headMap.get(key);
+  if (head.type === "delta") {
+    // Delta diff: only iterate products present in the delta.
+    // Absence from the delta means unchanged, never removed.
+    for (const [key, headProduct] of headMap) {
+      const baseProduct = baseMap.get(key);
 
-    if (!baseProduct) {
-      rows.push({ item_id: key, title: headProduct?.title ?? null, status: "added", changedFields: [] });
-      summary.added++;
-    } else if (!headProduct) {
-      rows.push({ item_id: key, title: baseProduct.title, status: "removed", changedFields: [] });
-      summary.removed++;
-    } else {
-      const baseAttrs = baseProduct.attributes ?? {};
-      const headAttrs = headProduct.attributes ?? {};
-      const allFields = new Set([...Object.keys(baseAttrs), ...Object.keys(headAttrs)]);
-      const changedFields: ChangedField[] = [];
+      if (!baseProduct) {
+        rows.push({ item_id: key, title: headProduct.title ?? null, status: "added", changedFields: [] });
+        summary.added++;
+      } else {
+        const baseAttrs = baseProduct.attributes ?? {};
+        const headAttrs = headProduct.attributes ?? {};
+        const allFields = new Set([...Object.keys(baseAttrs), ...Object.keys(headAttrs)]);
+        const changedFields: ChangedField[] = [];
 
-      for (const field of allFields) {
-        const oldValue = baseAttrs[field] ?? "";
-        const newValue = headAttrs[field] ?? "";
-        if (oldValue !== newValue) {
-          changedFields.push({ field, oldValue, newValue });
+        for (const field of allFields) {
+          const oldValue = baseAttrs[field] ?? "";
+          const newValue = headAttrs[field] ?? "";
+          if (oldValue !== newValue) {
+            changedFields.push({ field, oldValue, newValue });
+          }
+        }
+
+        if (changedFields.length > 0) {
+          rows.push({ item_id: key, title: headProduct.title, status: "changed", changedFields });
+          summary.changed++;
+        } else {
+          rows.push({ item_id: key, title: headProduct.title, status: "unchanged", changedFields: [] });
+          summary.unchanged++;
         }
       }
+    }
+  } else {
+    // Full vs full diff: union of both key sets; absence in head means removed.
+    const allKeys = new Set([...baseMap.keys(), ...headMap.keys()]);
 
-      if (changedFields.length > 0) {
-        rows.push({ item_id: key, title: headProduct.title, status: "changed", changedFields });
-        summary.changed++;
+    for (const key of allKeys) {
+      const baseProduct = baseMap.get(key);
+      const headProduct = headMap.get(key);
+
+      if (!baseProduct) {
+        rows.push({ item_id: key, title: headProduct?.title ?? null, status: "added", changedFields: [] });
+        summary.added++;
+      } else if (!headProduct) {
+        rows.push({ item_id: key, title: baseProduct.title, status: "removed", changedFields: [] });
+        summary.removed++;
       } else {
-        rows.push({ item_id: key, title: headProduct.title, status: "unchanged", changedFields: [] });
-        summary.unchanged++;
+        const baseAttrs = baseProduct.attributes ?? {};
+        const headAttrs = headProduct.attributes ?? {};
+        const allFields = new Set([...Object.keys(baseAttrs), ...Object.keys(headAttrs)]);
+        const changedFields: ChangedField[] = [];
+
+        for (const field of allFields) {
+          const oldValue = baseAttrs[field] ?? "";
+          const newValue = headAttrs[field] ?? "";
+          if (oldValue !== newValue) {
+            changedFields.push({ field, oldValue, newValue });
+          }
+        }
+
+        if (changedFields.length > 0) {
+          rows.push({ item_id: key, title: headProduct.title, status: "changed", changedFields });
+          summary.changed++;
+        } else {
+          rows.push({ item_id: key, title: headProduct.title, status: "unchanged", changedFields: [] });
+          summary.unchanged++;
+        }
       }
     }
   }
