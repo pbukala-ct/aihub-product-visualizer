@@ -9,9 +9,12 @@ interface Props {
 export function AttributeSchemaView({ products }: Props) {
   const [open, setOpen] = useState(false);
 
-  // Derive columns present in this feed run from raw attributes
+  // A field is "present" if it has a non-null typed column value OR exists as a key in the raw attributes blob.
+  // Typed columns are checked first because empty-string values are stripped from the attributes JSON during ingest.
   const sample = products[0];
   const presentColumns = new Set<string>(sample?.attributes ? Object.keys(sample.attributes) : []);
+  const isPresent = (attr: string): boolean =>
+    (sample && attr in sample && sample[attr as keyof typeof sample] != null) || presentColumns.has(attr);
 
   return (
     <>
@@ -58,7 +61,7 @@ export function AttributeSchemaView({ products }: Props) {
                 </h3>
                 <ul className="space-y-1">
                   {OPENAI_REQUIRED_ATTRIBUTES.map((attr) => {
-                    const present = presentColumns.has(attr);
+                    const present = isPresent(attr);
                     return (
                       <li key={attr} className="flex items-center gap-2 text-sm">
                         {present ? (
