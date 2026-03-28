@@ -1,0 +1,83 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { FeedRunBadge } from "@/components/FeedRunBadge";
+import { DeleteSourceButton } from "@/components/DeleteSourceButton";
+import { getAllSources } from "@/lib/services/feed-runs";
+
+const sources = await getAllSources();
+---
+
+<Layout title="AI Hub Feed Visualiser">
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white border-b border-gray-200 px-4 py-4 sm:px-6">
+      <div class="mx-auto max-w-7xl flex items-center justify-between gap-4">
+        <h1 class="text-xl font-semibold text-gray-900">AI Hub Feed Visualiser</h1>
+        <nav class="flex items-center gap-4 text-sm">
+          <a href="/" class="font-medium text-gray-900 border-b-2 border-indigo-500 pb-0.5">Catalogues</a>
+          <a href="/history" class="text-gray-500 hover:text-gray-900 transition-colors">Feed History</a>
+          <a href="/diff" class="text-gray-500 hover:text-gray-900 transition-colors">Compare Feeds</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      {
+        sources.length > 0 ? (
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {sources.map((source) => (
+              <div class="group relative flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-gray-300 transition-all">
+                <a
+                  href={`/source/${source.slug}`}
+                  class="absolute inset-0 rounded-xl"
+                  aria-label={source.display_name}
+                />
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-base font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                    {source.display_name}
+                  </span>
+                  <div class="relative flex items-center gap-2">
+                    {source.latest_run && <FeedRunBadge type={source.latest_run.type} client:load />}
+                    <DeleteSourceButton slug={source.slug} client:load />
+                  </div>
+                </div>
+
+                <code class="text-xs text-gray-400 font-mono">/api/feed/ingest/{source.slug}</code>
+
+                {source.latest_run ? (
+                  <div class="text-sm text-gray-500 mt-auto">
+                    <span class="font-medium text-gray-700">
+                      {source.latest_run.product_count.toLocaleString()} products
+                    </span>
+                    {" · "}
+                    {new Date(source.latest_run.received_at).toLocaleString("en-GB", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                      timeZone: "UTC",
+                    })}{" "}
+                    UTC
+                  </div>
+                ) : (
+                  <p class="text-sm text-gray-400 mt-auto">No feeds yet</p>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div class="flex flex-col items-center justify-center py-32 text-center">
+            <svg class="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+            <h2 class="text-lg font-medium text-gray-700">No catalogues yet</h2>
+            <p class="mt-2 text-sm text-gray-500 max-w-sm">
+              Point your AI Hub webhook at{" "}
+              <code class="rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs">
+                POST /api/feed/ingest/your-source-name
+              </code>{" "}
+              and it will appear here automatically.
+            </p>
+          </div>
+        )
+      }
+    </main>
+  </div>
+</Layout>

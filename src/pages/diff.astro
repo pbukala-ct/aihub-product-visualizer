@@ -1,0 +1,156 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { FeedDiff } from "@/components/FeedDiff";
+import { DiffRunPicker } from "@/components/DiffRunPicker";
+import { FeedRunBadge } from "@/components/FeedRunBadge";
+import { diffFeedRuns, getAllFeedRuns, getSourceBySlug } from "@/lib/services/feed-runs";
+
+const { searchParams } = Astro.url;
+const baseId = searchParams.get("base");
+const headId = searchParams.get("head");
+const preselectedHead = searchParams.get("head") ?? undefined;
+const sourceSlug = searchParams.get("source") ?? undefined;
+
+const source = sourceSlug ? await getSourceBySlug(sourceSlug) : null;
+const runs = await getAllFeedRuns(source?.id);
+
+let diff = null;
+let error = null;
+
+if (baseId && headId) {
+  diff = await diffFeedRuns(baseId, headId);
+  if (!diff) {
+    error = "One or both feed run IDs are invalid.";
+  }
+}
+---
+
+<Layout title={source ? `${source.display_name} · Compare Feeds` : "Compare Feeds"}>
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6">
+      <div class="mx-auto max-w-7xl">
+        {
+          source && (
+            <div class="flex items-center justify-between gap-4 py-3 border-b border-gray-100">
+              <a href="/" class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Catalogues
+              </a>
+              <nav class="flex items-center gap-4 text-xs text-gray-400">
+                <a href="/history" class="hover:text-gray-600 transition-colors">
+                  All Feed History
+                </a>
+                <a href="/diff" class="hover:text-gray-600 transition-colors">
+                  Compare Any Feeds
+                </a>
+              </nav>
+            </div>
+          )
+        }
+        {
+          source ? (
+            <div class="flex items-center justify-between gap-4 pt-3">
+              <h1 class="text-xl font-semibold text-gray-900">{source.display_name}</h1>
+              <nav class="flex items-center gap-1 text-sm -mb-px">
+                <a
+                  href={`/source/${source.slug}`}
+                  class="px-3 py-2 text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 transition-colors"
+                >
+                  Products
+                </a>
+                <a
+                  href={`/history?source=${source.slug}`}
+                  class="px-3 py-2 text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 transition-colors"
+                >
+                  Feed History
+                </a>
+                <a
+                  href={`/diff?source=${source.slug}`}
+                  class="px-3 py-2 font-medium text-indigo-600 border-b-2 border-indigo-500"
+                >
+                  Compare Feeds
+                </a>
+              </nav>
+            </div>
+          ) : (
+            <div class="flex items-center justify-between gap-4 py-4">
+              <h1 class="text-xl font-semibold text-gray-900">Compare Feeds</h1>
+              <nav class="flex items-center gap-4 text-sm">
+                <a href="/" class="text-gray-500 hover:text-gray-900 transition-colors">
+                  Catalogues
+                </a>
+                <a href="/history" class="text-gray-500 hover:text-gray-900 transition-colors">
+                  Feed History
+                </a>
+                <a href="/diff" class="font-medium text-gray-900 border-b-2 border-indigo-500 pb-0.5">
+                  Compare Feeds
+                </a>
+              </nav>
+            </div>
+          )
+        }
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      {
+        error && (
+          <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+            {error}{" "}
+            <a href="/history" class="underline font-medium">
+              ← Back to history
+            </a>
+          </div>
+        )
+      }
+
+      {
+        diff ? (
+          <>
+            <div class="mb-5 flex flex-wrap items-start gap-6">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Base</span>
+                <FeedRunBadge type={diff.base.type} client:load />
+                <span class="text-sm text-gray-700">
+                  {new Date(diff.base.received_at).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "UTC",
+                  })}{" "}
+                  UTC
+                </span>
+                <span class="text-xs text-gray-400">· {diff.base.product_count} products</span>
+              </div>
+              <span class="text-gray-300 self-center">→</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold uppercase tracking-wide text-gray-400">Head</span>
+                <FeedRunBadge type={diff.head.type} client:load />
+                <span class="text-sm text-gray-700">
+                  {new Date(diff.head.received_at).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "UTC",
+                  })}{" "}
+                  UTC
+                </span>
+                <span class="text-xs text-gray-400">· {diff.head.product_count} products</span>
+              </div>
+              <a
+                href={source ? `/diff?source=${source.slug}` : "/diff"}
+                class="ml-auto text-sm text-indigo-600 hover:underline"
+              >
+                Change runs
+              </a>
+            </div>
+
+            <FeedDiff diff={diff} client:load />
+          </>
+        ) : (
+          !error && <DiffRunPicker runs={runs} preselectedHead={preselectedHead} sourceSlug={sourceSlug} client:load />
+        )
+      }
+    </main>
+  </div>
+</Layout>

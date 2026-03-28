@@ -1,0 +1,84 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { FeedRunList } from "@/components/FeedRunList";
+import { getAllFeedRuns, getSourceBySlug } from "@/lib/services/feed-runs";
+
+const sourceSlug = Astro.url.searchParams.get("source") ?? undefined;
+const source = sourceSlug ? await getSourceBySlug(sourceSlug) : null;
+const runs = await getAllFeedRuns(source?.id);
+---
+
+<Layout title={source ? `${source.display_name} · Feed History` : "Feed History"}>
+  <div class="min-h-screen bg-gray-50">
+    <header class="bg-white border-b border-gray-200 px-4 sm:px-6">
+      <div class="mx-auto max-w-7xl">
+        {
+          source && (
+            <div class="flex items-center justify-between gap-4 py-3 border-b border-gray-100">
+              <a href="/" class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Catalogues
+              </a>
+              <nav class="flex items-center gap-4 text-xs text-gray-400">
+                <a href="/history" class="hover:text-gray-600 transition-colors">
+                  All Feed History
+                </a>
+                <a href="/diff" class="hover:text-gray-600 transition-colors">
+                  Compare Any Feeds
+                </a>
+              </nav>
+            </div>
+          )
+        }
+        {
+          source ? (
+            <div class="flex items-center justify-between gap-4 pt-3">
+              <h1 class="text-xl font-semibold text-gray-900">{source.display_name}</h1>
+              <nav class="flex items-center gap-1 text-sm -mb-px">
+                <a
+                  href={`/source/${source.slug}`}
+                  class="px-3 py-2 text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 transition-colors"
+                >
+                  Products
+                </a>
+                <a
+                  href={`/history?source=${source.slug}`}
+                  class="px-3 py-2 font-medium text-indigo-600 border-b-2 border-indigo-500"
+                >
+                  Feed History
+                </a>
+                <a
+                  href={`/diff?source=${source.slug}`}
+                  class="px-3 py-2 text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-300 transition-colors"
+                >
+                  Compare Feeds
+                </a>
+              </nav>
+            </div>
+          ) : (
+            <div class="flex items-center justify-between gap-4 py-4">
+              <h1 class="text-xl font-semibold text-gray-900">Feed History</h1>
+              <nav class="flex items-center gap-4 text-sm">
+                <a href="/" class="text-gray-500 hover:text-gray-900 transition-colors">
+                  Catalogues
+                </a>
+                <a href="/history" class="font-medium text-gray-900 border-b-2 border-indigo-500 pb-0.5">
+                  Feed History
+                </a>
+                <a href="/diff" class="text-gray-500 hover:text-gray-900 transition-colors">
+                  Compare Feeds
+                </a>
+              </nav>
+            </div>
+          )
+        }
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+      <FeedRunList runs={runs} sourceSlug={sourceSlug} client:load />
+    </main>
+  </div>
+</Layout>
