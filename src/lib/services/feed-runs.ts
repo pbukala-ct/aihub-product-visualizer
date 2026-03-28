@@ -13,7 +13,6 @@ import type {
 
 export interface DeltaSummary {
   added: number;
-  removed: number;
   changed: number;
 }
 
@@ -33,18 +32,43 @@ export async function getAllSources(): Promise<SourceSummary[]> {
 
   if (!sources?.length) return [];
 
-  // Fetch latest run per source
   const results: SourceSummary[] = await Promise.all(
     sources.map(async (source) => {
-      const { data: run } = await supabase
-        .from("feed_runs")
-        .select("id, received_at, type, product_count, source_id, created_at")
-        .eq("source_id", source.id)
-        .order("received_at", { ascending: false })
-        .limit(1)
-        .single();
+      const [{ data: latestRun }, { data: latestFullRun }] = await Promise.all([
+        supabase
+          .from("feed_runs")
+          .select("id, received_at, type, product_count, source_id, created_at")
+          .eq("source_id", source.id)
+          .order("received_at", { ascending: false })
+          .limit(1)
+          .single(),
+        supabase
+          .from("feed_runs")
+          .select("id, received_at, type, product_count, source_id, created_at")
+          .eq("source_id", source.id)
+          .eq("type", "full")
+          .order("received_at", { ascending: false })
+          .limit(1)
+          .single(),
+      ]);
 
-      return { ...source, latest_run: (run as FeedRunSummary) ?? null };
+      let delta_run_count = 0;
+      if (latestFullRun) {
+        const { count } = await supabase
+          .from("feed_runs")
+          .select("id", { count: "exact", head: true })
+          .eq("source_id", source.id)
+          .eq("type", "delta")
+          .gt("received_at", latestFullRun.received_at);
+        delta_run_count = count ?? 0;
+      }
+
+      return {
+        ...source,
+        latest_run: (latestRun as FeedRunSummary) ?? null,
+        latest_full_run: (latestFullRun as FeedRunSummary) ?? null,
+        delta_run_count,
+      };
     })
   );
 
@@ -78,31 +102,26 @@ export async function getDeltaRunsSince(sourceId: string, afterTimestamp: string
 
 export function computeDeltaSummary(fullRunProducts: Product[], deltaRunProducts: Product[]): DeltaSummary {
   const baseMap = new Map(fullRunProducts.map((p) => [p.item_id ?? p.id, p]));
-  const headMap = new Map(deltaRunProducts.map((p) => [p.item_id ?? p.id, p]));
-  const allKeys = new Set([...baseMap.keys(), ...headMap.keys()]);
 
   let added = 0;
-  let removed = 0;
   let changed = 0;
 
-  for (const key of allKeys) {
+  for (const deltaProduct of deltaRunProducts) {
+    const key = deltaProduct.item_id ?? deltaProduct.id;
     const base = baseMap.get(key);
-    const head = headMap.get(key);
 
     if (!base) {
       added++;
-    } else if (!head) {
-      removed++;
     } else {
       const baseAttrs = base.attributes ?? {};
-      const headAttrs = head.attributes ?? {};
+      const headAttrs = deltaProduct.attributes ?? {};
       const allFields = new Set([...Object.keys(baseAttrs), ...Object.keys(headAttrs)]);
       const hasChange = [...allFields].some((f) => (baseAttrs[f] ?? "") !== (headAttrs[f] ?? ""));
       if (hasChange) changed++;
     }
   }
 
-  return { added, removed, changed };
+  return { added, changed };
 }
 
 export async function getLatestFeedRun(sourceId?: string): Promise<FeedRun | null> {

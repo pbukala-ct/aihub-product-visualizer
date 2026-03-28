@@ -16,7 +16,7 @@ export function CatalogDeltaTimeline({ deltaRuns, fullRunId }: Props) {
       </h2>
       <ol className="relative border-l border-gray-200 ml-2 space-y-4">
         {deltaRuns.map((delta) => {
-          const { added, removed, changed } = delta.summary;
+          const { added, changed } = delta.summary;
           const diffUrl = `/diff?base=${fullRunId}&head=${delta.id}`;
           const timestamp = new Date(delta.received_at).toLocaleString("en-GB", {
             dateStyle: "medium",
@@ -36,17 +36,12 @@ export function CatalogDeltaTimeline({ deltaRuns, fullRunId }: Props) {
                       +{added} added
                     </span>
                   )}
-                  {removed > 0 && (
-                    <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
-                      -{removed} removed
-                    </span>
-                  )}
                   {changed > 0 && (
                     <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
                       {changed} changed
                     </span>
                   )}
-                  {added === 0 && removed === 0 && changed === 0 && (
+                  {added === 0 && changed === 0 && (
                     <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500 ring-1 ring-inset ring-gray-500/20">
                       no changes
                     </span>

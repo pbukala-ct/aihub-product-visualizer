@@ -9,6 +9,8 @@ export interface Source {
 
 export interface SourceSummary extends Source {
   latest_run: FeedRunSummary | null;
+  latest_full_run: FeedRunSummary | null;
+  delta_run_count: number;
 }
 
 export interface FeedRunSummary {
