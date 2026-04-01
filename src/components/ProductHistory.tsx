@@ -172,7 +172,7 @@ export function ProductHistory({ itemId, sourceSlug }: Props) {
         </svg>
         <p className="text-sm font-medium text-gray-500">History unavailable</p>
         <p className="text-xs text-gray-400 mt-1 max-w-xs">
-          Cross-feed history tracking requires a stable product ID (<code>item_id</code>). This product doesn't have
+          Cross-feed history tracking requires a stable product ID (<code>item_id</code>). This product does not have
           one.
         </p>
       </div>
