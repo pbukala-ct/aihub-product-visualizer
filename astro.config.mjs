@@ -20,6 +20,7 @@ export default defineConfig({
       SUPABASE_URL: envField.string({ context: "server", access: "secret" }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret" }),
       SUPABASE_SERVICE_KEY: envField.string({ context: "server", access: "secret" }),
+      CATALOGUE_SESSION_SECRET: envField.string({ context: "server", access: "secret" }),
     },
   },
 });

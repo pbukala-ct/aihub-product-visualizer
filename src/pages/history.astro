@@ -4,6 +4,7 @@ import AppNav from "@/components/AppNav.astro";
 import { FeedRunList } from "@/components/FeedRunList";
 import { getAllFeedRuns, getSourceBySlug } from "@/lib/services/feed-runs";
 
+const { user } = Astro.locals;
 const sourceSlug = Astro.url.searchParams.get("source") ?? undefined;
 const source = sourceSlug ? await getSourceBySlug(sourceSlug) : null;
 const runs = await getAllFeedRuns(source?.id);
@@ -16,6 +17,7 @@ const runs = await getAllFeedRuns(source?.id);
       source={source ?? undefined}
       activeSourceTab={source ? "history" : undefined}
       backTo={source ? { href: "/", label: "Catalogues" } : undefined}
+      isAdmin={!!user}
     />
 
     <main class="mx-auto max-w-3xl px-4 py-6 sm:px-6">

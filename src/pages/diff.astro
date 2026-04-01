@@ -6,6 +6,7 @@ import { DiffRunPicker } from "@/components/DiffRunPicker";
 import { FeedRunBadge } from "@/components/FeedRunBadge";
 import { diffFeedRuns, getAllFeedRuns, getSourceBySlug } from "@/lib/services/feed-runs";
 
+const { user } = Astro.locals;
 const { searchParams } = Astro.url;
 const baseId = searchParams.get("base");
 const headId = searchParams.get("head");
@@ -33,6 +34,7 @@ if (baseId && headId) {
       source={source ?? undefined}
       activeSourceTab={source ? "diff" : undefined}
       backTo={source ? { href: "/", label: "Catalogues" } : undefined}
+      isAdmin={!!user}
     />
 
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">

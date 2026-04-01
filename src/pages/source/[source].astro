@@ -14,6 +14,7 @@ import {
 import type { AnnotatedDeltaRun } from "@/lib/services/feed-runs";
 
 const { source: slug } = Astro.params;
+const { user } = Astro.locals;
 
 const source = slug ? await getSourceBySlug(slug) : null;
 
@@ -43,6 +44,7 @@ const deltaRuns: AnnotatedDeltaRun[] = feedRun
       source={source}
       activeSourceTab="products"
       backTo={{ href: "/", label: "Catalogues" }}
+      isAdmin={!!user}
     />
 
     <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">

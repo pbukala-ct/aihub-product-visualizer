@@ -1,0 +1,29 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AppNav from "@/components/AppNav.astro";
+import { CataloguePasswordGate } from "@/components/CataloguePasswordGate";
+import { getSourceBySlug } from "@/lib/services/feed-runs";
+
+const { source: slug } = Astro.params;
+const redirectTo = Astro.url.searchParams.get("redirect") ?? `/source/${slug}`;
+
+const source = slug ? await getSourceBySlug(slug) : null;
+
+if (!source || !source.is_protected) {
+  return Astro.redirect(redirectTo);
+}
+---
+
+<Layout title={`Access required · ${source.display_name}`}>
+  <div class="min-h-screen bg-gray-50">
+    <AppNav activePage="catalogues" />
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+      <CataloguePasswordGate
+        sourceSlug={source.slug}
+        sourceName={source.display_name}
+        redirectTo={redirectTo}
+        client:load
+      />
+    </main>
+  </div>
+</Layout>

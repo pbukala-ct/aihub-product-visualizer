@@ -42,7 +42,24 @@ export function FeedRunList({ runs, sourceSlug }: Props) {
                 </span>
                 <span className="shrink-0 text-sm text-gray-500">{run.product_count.toLocaleString()} products</span>
                 {!sourceSlug && run.sources && (
-                  <span className="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                  <span className="shrink-0 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                    {run.sources.is_protected && (
+                      <svg
+                        className="h-3 w-3 text-gray-400 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        aria-label="Protected catalogue"
+                        role="img"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                    )}
                     {run.sources.display_name}
                   </span>
                 )}

@@ -1,0 +1,42 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AppNav from "@/components/AppNav.astro";
+import { SourceProtectionSettings } from "@/components/SourceProtectionSettings";
+import { getSourceBySlug } from "@/lib/services/feed-runs";
+
+const { user } = Astro.locals;
+if (!user) {
+  return Astro.redirect("/auth/signin");
+}
+
+const { source: slug } = Astro.params;
+const source = slug ? await getSourceBySlug(slug) : null;
+
+if (!source) {
+  return new Response(null, { status: 404 });
+}
+---
+
+<Layout title={`Settings · ${source.display_name}`}>
+  <div class="min-h-screen bg-gray-50">
+    <AppNav
+      activePage="catalogues"
+      source={source}
+      activeSourceTab="settings"
+      backTo={{ href: "/", label: "Catalogues" }}
+    />
+
+    <main class="mx-auto max-w-2xl px-4 py-6 sm:px-6">
+      <h1 class="text-lg font-semibold text-gray-900 mb-6">
+        {source.display_name} · Settings
+      </h1>
+
+      <SourceProtectionSettings
+        sourceSlug={source.slug}
+        isProtected={source.is_protected}
+        hasPassword={source.access_password_hash !== null}
+        client:load
+      />
+    </main>
+  </div>
+</Layout>

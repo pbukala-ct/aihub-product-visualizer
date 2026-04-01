@@ -26,6 +26,13 @@ export async function getSourceBySlug(slug: string): Promise<Source | null> {
   return data ?? null;
 }
 
+export async function getSourceByFeedRunId(runId: string): Promise<Source | null> {
+  const supabase = createAdminClient();
+  const { data } = await supabase.from("feed_runs").select("source_id, sources(*)").eq("id", runId).single();
+  if (!data?.sources) return null;
+  return data.sources as unknown as Source;
+}
+
 export async function getAllSources(): Promise<SourceSummary[]> {
   const supabase = createAdminClient();
   const { data: sources } = await supabase.from("sources").select("*").order("created_at", { ascending: true });
@@ -144,7 +151,7 @@ export async function getAllFeedRuns(sourceId?: string): Promise<FeedRunSummary[
   const supabase = createAdminClient();
   let query = supabase
     .from("feed_runs")
-    .select("id, received_at, type, product_count, source_id, created_at, sources(slug, display_name)")
+    .select("id, received_at, type, product_count, source_id, created_at, sources(slug, display_name, is_protected)")
     .order("received_at", { ascending: false });
 
   if (sourceId) query = query.eq("source_id", sourceId);

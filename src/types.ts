@@ -4,6 +4,8 @@ export interface Source {
   id: string;
   slug: string;
   display_name: string;
+  is_protected: boolean;
+  access_password_hash: string | null;
   created_at: string;
 }
 
@@ -19,7 +21,7 @@ export interface FeedRunSummary {
   type: FeedRunType;
   product_count: number;
   source_id: string | null;
-  sources?: { slug: string; display_name: string } | null;
+  sources?: { slug: string; display_name: string; is_protected: boolean } | null;
   created_at: string;
 }
 

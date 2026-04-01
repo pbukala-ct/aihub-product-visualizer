@@ -29,13 +29,7 @@ const statusConfig: Record<DiffStatus, { label: string; badge: string; row: stri
   },
 };
 
-function SummaryBar({
-  summary,
-  isDeltaDiff,
-}: {
-  summary: FeedDiffResult["summary"];
-  isDeltaDiff: boolean;
-}) {
+function SummaryBar({ summary, isDeltaDiff }: { summary: FeedDiffResult["summary"]; isDeltaDiff: boolean }) {
   const items: { status: DiffStatus; icon: string }[] = [
     { status: "added", icon: "+" },
     ...(isDeltaDiff ? [] : [{ status: "removed" as DiffStatus, icon: "−" }]),
@@ -105,7 +99,9 @@ function ProductRow({ row, colSpan }: { row: ProductDiffRow; colSpan: number }) 
               }}
               aria-label={expanded ? "Collapse changes" : "Expand changes"}
             >
-              <span>{row.changedFields.length} field{row.changedFields.length !== 1 ? "s" : ""}</span>
+              <span>
+                {row.changedFields.length} field{row.changedFields.length !== 1 ? "s" : ""}
+              </span>
               <svg
                 className={cn("h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
                 fill="none"
@@ -184,9 +180,7 @@ export function FeedDiff({ diff }: Props) {
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 )}
               >
-                {f === "all"
-                  ? `All (${diff.rows.length})`
-                  : `${statusConfig[f].label} (${diff.summary[f]})`}
+                {f === "all" ? `All (${diff.rows.length})` : `${statusConfig[f].label} (${diff.summary[f]})`}
               </button>
             ))}
           </div>

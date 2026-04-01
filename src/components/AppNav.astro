@@ -10,12 +10,14 @@ interface Props {
   /** If set, renders the source sub-nav bar below the main nav */
   source?: Source;
   /** Which source tab is active */
-  activeSourceTab?: "products" | "history" | "diff";
+  activeSourceTab?: "products" | "history" | "diff" | "settings";
   /** Optional back link shown in the main nav bar */
   backTo?: { href: string; label: string };
+  /** If true, shows the Settings tab in the source sub-nav */
+  isAdmin?: boolean;
 }
 
-const { activePage, source, activeSourceTab, backTo } = Astro.props;
+const { activePage, source, activeSourceTab, backTo, isAdmin } = Astro.props;
 
 const globalNav = [
   { id: "catalogues", label: "Catalogues", href: "/" },
@@ -99,9 +101,10 @@ const globalNav = [
           <!-- Source tabs -->
           <nav class="flex items-center gap-0.5 shrink-0">
             {[
-              { id: "products", label: "Products",     href: `/source/${source.slug}` },
-              { id: "history",  label: "Feed History", href: `/history?source=${source.slug}` },
-              { id: "diff",     label: "Compare",      href: `/diff?source=${source.slug}` },
+              { id: "products",  label: "Products",     href: `/source/${source.slug}` },
+              { id: "history",   label: "Feed History", href: `/history?source=${source.slug}` },
+              { id: "diff",      label: "Compare",      href: `/diff?source=${source.slug}` },
+              ...(isAdmin ? [{ id: "settings", label: "Settings", href: `/admin/source/${source.slug}` }] : []),
             ].map(({ id, label, href }) => (
               <a
                 href={href}
