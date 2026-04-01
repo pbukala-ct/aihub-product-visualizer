@@ -4,6 +4,7 @@ import type {
   FeedRunSummary,
   FeedDiffResult,
   ProductDiffRow,
+  ProductVersion,
   DiffStatus,
   ChangedField,
   Source,
@@ -249,4 +250,47 @@ export async function diffFeedRuns(baseId: string, headId: string): Promise<Feed
   rows.sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status));
 
   return { base, head, summary, rows };
+}
+
+export async function getProductHistory(itemId: string, sourceId: string, limit = 20): Promise<ProductVersion[]> {
+  const supabase = createAdminClient();
+
+  // Fetch all feed runs for this source that contain a product with the given item_id
+  const { data: matches } = await supabase
+    .from("products")
+    .select("feed_run_id, attributes, feed_runs!inner(id, received_at, type, product_count, source_id, created_at)")
+    .eq("item_id", itemId)
+    .eq("feed_runs.source_id", sourceId)
+    .order("feed_runs(received_at)", { ascending: false })
+    .limit(limit);
+
+  if (!matches?.length) return [];
+
+  // Build versions newest-first with diffs vs the next-older entry
+  const versions: ProductVersion[] = matches.map((row, index) => {
+    const feedRun = row.feed_runs as unknown as FeedRunSummary;
+    const attrs: Record<string, string> = (row.attributes as Record<string, string>) ?? {};
+    const isFirstVersion = index === matches.length - 1;
+
+    if (isFirstVersion) {
+      return { feedRun, attributes: attrs, changedFields: [], isFirstVersion: true };
+    }
+
+    // Compare against the next-older version (index + 1 is older since list is newest-first)
+    const prevAttrs: Record<string, string> = (matches[index + 1].attributes as Record<string, string>) ?? {};
+    const allFields = new Set([...Object.keys(attrs), ...Object.keys(prevAttrs)]);
+    const changedFields: ChangedField[] = [];
+
+    for (const field of allFields) {
+      const oldValue = prevAttrs[field] ?? "";
+      const newValue = attrs[field] ?? "";
+      if (oldValue !== newValue) {
+        changedFields.push({ field, oldValue, newValue });
+      }
+    }
+
+    return { feedRun, attributes: attrs, changedFields, isFirstVersion: false };
+  });
+
+  return versions;
 }

@@ -5,9 +5,10 @@ import type { Product } from "@/types";
 
 interface Props {
   products: Product[];
+  sourceSlug?: string;
 }
 
-export function ProductGrid({ products }: Props) {
+export function ProductGrid({ products, sourceSlug }: Props) {
   const [selected, setSelected] = useState<Product | null>(null);
 
   return (
@@ -17,7 +18,7 @@ export function ProductGrid({ products }: Props) {
           <ProductCard key={product.id} product={product} onClick={() => setSelected(product)} />
         ))}
       </div>
-      <ProductDetail product={selected} onClose={() => setSelected(null)} />
+      <ProductDetail product={selected} onClose={() => setSelected(null)} sourceSlug={sourceSlug} />
     </>
   );
 }

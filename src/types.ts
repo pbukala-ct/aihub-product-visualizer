@@ -103,3 +103,10 @@ export interface FeedDiffResult {
   summary: Record<DiffStatus, number>;
   rows: ProductDiffRow[];
 }
+
+export interface ProductVersion {
+  feedRun: FeedRunSummary;
+  attributes: Record<string, string>;
+  changedFields: ChangedField[];
+  isFirstVersion: boolean;
+}
