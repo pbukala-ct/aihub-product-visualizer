@@ -28,8 +28,8 @@ export function ProductGrid({ products, sourceSlug }: Props) {
         const idMatch = p.item_id?.toLowerCase().includes(q) ?? false;
         if (!titleMatch && !idMatch) return false;
       }
-      if (filterCheckout && !isFlagEnabled(p.enable_checkout)) return false;
-      if (filterSearch && !isFlagEnabled(p.enable_search)) return false;
+      if (filterCheckout && !isFlagEnabled(p.attributes?.enable_checkout ?? null)) return false;
+      if (filterSearch && !isFlagEnabled(p.attributes?.enable_search ?? null)) return false;
       return true;
     });
   }, [products, searchQuery, filterCheckout, filterSearch]);

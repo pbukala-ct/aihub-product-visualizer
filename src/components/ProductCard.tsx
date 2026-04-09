@@ -115,8 +115,8 @@ export function ProductCard({ product, onClick }: Props) {
         </div>
         {product.item_id && <p className="text-xs text-gray-400 truncate">ID: {product.item_id}</p>}
         <div className="flex flex-wrap gap-1 pt-1">
-          <FlagBadge label="Checkout" value={product.enable_checkout} />
-          <FlagBadge label="Search" value={product.enable_search} />
+          <FlagBadge label="Checkout" value={product.attributes?.enable_checkout ?? null} />
+          <FlagBadge label="Search" value={product.attributes?.enable_search ?? null} />
         </div>
       </div>
     </button>
