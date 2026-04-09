@@ -31,6 +31,42 @@ function formatPrice(price: string | null): string {
   return price;
 }
 
+function isFlagEnabled(value: string | null): boolean | null {
+  if (value === null || value === undefined) return null;
+  const v = value.toLowerCase().trim();
+  if (v === "") return null;
+  if (v === "false" || v === "0" || v === "no") return false;
+  return true;
+}
+
+interface FlagBadgeProps {
+  label: string;
+  value: string | null;
+}
+
+function FlagBadge({ label, value }: FlagBadgeProps) {
+  const enabled = isFlagEnabled(value);
+  if (enabled === true) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+        {label}
+      </span>
+    );
+  }
+  if (enabled === false) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 line-through">
+        {label}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full border border-dashed border-gray-200 px-2 py-0.5 text-xs font-medium text-gray-300">
+      {label}
+    </span>
+  );
+}
+
 function availabilityColor(availability: string | null): string {
   if (!availability) return "bg-gray-100 text-gray-600";
   const v = availability.toLowerCase();
@@ -78,6 +114,10 @@ export function ProductCard({ product, onClick }: Props) {
           )}
         </div>
         {product.item_id && <p className="text-xs text-gray-400 truncate">ID: {product.item_id}</p>}
+        <div className="flex flex-wrap gap-1 pt-1">
+          <FlagBadge label="Checkout" value={product.enable_checkout} />
+          <FlagBadge label="Search" value={product.enable_search} />
+        </div>
       </div>
     </button>
   );

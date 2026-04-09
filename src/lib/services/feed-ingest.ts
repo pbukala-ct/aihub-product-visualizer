@@ -78,6 +78,8 @@ export function parseCsv(raw: string): ParsedProduct[] {
     ads_redirect: row["ads_redirect"] ?? null,
     loyalty_points: row["loyalty_points"] ?? null,
     installment: row["installment"] ?? null,
+    enable_checkout: row["enable_checkout"] ?? null,
+    enable_search: row["enable_search"] ?? null,
     // Store all raw CSV fields for full attribute display
     attributes: Object.fromEntries(Object.entries(row).filter(([, v]) => v !== "")),
   }));

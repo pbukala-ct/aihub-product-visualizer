@@ -73,6 +73,8 @@ export interface Product {
   ads_redirect: string | null;
   loyalty_points: string | null;
   installment: string | null;
+  enable_checkout: string | null;
+  enable_search: string | null;
   attributes: Record<string, string> | null;
   created_at: string;
 }
